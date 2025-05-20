@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactPlayer from "react-player/youtube";
 
 interface BackgroundYouTubePlayerProps {
@@ -15,6 +15,20 @@ export const BackgroundYouTubePlayer: React.FC<BackgroundYouTubePlayerProps> = (
   audioOnly = false,
   volume = 0.5,
 }) => {
+
+    const [origin, setOrigin] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+    }
+  }, []);
+
+  // 2) Don't render player until we have a real origin
+  if (!origin) {
+    return null;
+  }
+
   return (
     <div
       style={{
