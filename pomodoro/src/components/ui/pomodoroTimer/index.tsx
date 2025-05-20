@@ -4,6 +4,8 @@ import { useTimer } from "react-timer-hook";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import  debounce  from 'lodash.debounce'
+import { BackgroundYouTubePlayer } from "../backgroundPlayer/backgroundYoutubePlayer";
+
 
 type Mode = "work" | "shortBreak" | "longBreak";
 
@@ -190,9 +192,24 @@ useEffect(() => {
     playAudio();
   }, [mode]);
 
-  const toggleTimer = () => {
-    console.log(isRunning ? "Timer paused" : "Timer started");
-    isRunning ? pause() : start();
+   const toggleTimer = () => {
+    if (isRunning) {
+      pause();
+    } else {
+      start();
+      // user gesture: unmute / play
+      const win = iframeRef.current?.contentWindow;
+      if (win) {
+        win.postMessage(
+          {
+            event: "command",
+            func: "playVideo",
+            args: "",
+          },
+          "*"
+        );
+      }
+    }
   };
 
   const resetTimer = () => {
@@ -296,14 +313,12 @@ useEffect(() => {
   </label>
 </div>
 
-    <iframe
-      ref={iframeRef}
-      width="0"
-      height="0"
-      style={{ display: "none" }}
-      allow="autoplay"
-      allowFullScreen
-    ></iframe>
+<BackgroundYouTubePlayer
+      videoUrl={mode === "work" ? workVideoUrl : breakVideoUrl}
+      playing={isRunning}
+      audioOnly={true}    
+      volume={0.4}
+    />
 
     </div>
   );
