@@ -1,8 +1,9 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTimer } from "react-timer-hook";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import  debounce  from 'lodash.debounce'
 
 type Mode = "work" | "shortBreak" | "longBreak";
 
@@ -14,6 +15,44 @@ const PomodoroTimer: React.FC = () => {
   const [cycleCount, setCycleCount] = useState<number>(0);
   const [voicePlayed, setVoicePlayed] = useState<boolean>(false);
   const [isFirstLoad, setIsFirstLoad] = useState<boolean>(true);
+  const [workVideoUrl, setWorkVideoUrl] = useState<string>("");
+  const [breakVideoUrl, setBreakVideoUrl] = useState<string>("");
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+
+ const getYoutubeEmbedUrl = (url: string): string => {
+  console.log("Parsing YouTube URL:", url);
+  try {
+    const parsed = new URL(url);
+    const isPlaylist = parsed.pathname.includes("/playlist");
+    const listId = parsed.searchParams.get("list");
+    const videoId =
+      parsed.hostname === "youtu.be"
+        ? parsed.pathname.slice(1)
+        : parsed.searchParams.get("v");
+
+    if (isPlaylist && listId) {
+      const embedUrl = `https://www.youtube.com/embed/videoseries?list=${listId}&autoplay=1&mute=1&loop=1`;
+      console.log("Detected playlist. Embed URL:", embedUrl);
+      return embedUrl;
+    }
+
+    if (videoId) {
+      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`;
+      console.log("Detected single video. Embed URL:", embedUrl);
+      return embedUrl;
+    }
+
+    console.warn("No valid video or playlist ID found.");
+    return "";
+  } catch (e) {
+    console.error("Invalid YouTube URL:", e);
+    return "";
+  }
+};
+
+
+
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -28,6 +67,21 @@ const PomodoroTimer: React.FC = () => {
     autoStart: false,
     onExpire: () => handleExpire(),
   });
+
+useEffect(() => {
+  const videoUrl =
+    mode === "work"
+      ? getYoutubeEmbedUrl(workVideoUrl)
+      : getYoutubeEmbedUrl(breakVideoUrl);
+
+  if (iframeRef.current) {
+    console.log(`Mode changed to '${mode}'. Setting iframe src to:`, videoUrl);
+    iframeRef.current.src = videoUrl;
+  } else {
+    console.warn("iframeRef is null");
+  }
+}, [mode, workVideoUrl, breakVideoUrl]);
+
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -51,14 +105,17 @@ const PomodoroTimer: React.FC = () => {
     loadSettings();
   }, []);
 
-  useEffect(() => {
-    const saveSettings = async () => {
-      const s = { workMinutes, shortBreakMinutes, longBreakMinutes };
-      localStorage.setItem("pomodoroSettings", JSON.stringify(s));
-      console.log("Saved settings", s);
-    };
-    saveSettings();
-  }, [workMinutes, shortBreakMinutes, longBreakMinutes]);
+ const saveSettings = useCallback(
+  debounce((settings: { workMinutes: number; shortBreakMinutes: number; longBreakMinutes: number }) => {
+    localStorage.setItem("pomodoroSettings", JSON.stringify(settings));
+    console.log("Saved settings (debounced)", settings);
+  }, 500),
+  []
+);
+
+useEffect(() => {
+  saveSettings({ workMinutes, shortBreakMinutes, longBreakMinutes });
+}, [workMinutes, shortBreakMinutes, longBreakMinutes]);
 
   useEffect(() => {
     if (!isRunning && !isFirstLoad) {
@@ -218,6 +275,36 @@ const PomodoroTimer: React.FC = () => {
           min
         </label>
       </div>
+      <div className="my-4 space-y-2 text-sm">
+  <label className="block">
+    Work YouTube URL:
+    <Input
+      type="url"
+      placeholder="https://www.youtube.com/watch?v=..."
+      value={workVideoUrl}
+      onChange={(e) => setWorkVideoUrl(e.target.value)}
+    />
+  </label>
+  <label className="block">
+    Break YouTube URL or Playlist:
+    <Input
+      type="url"
+      placeholder="https://www.youtube.com/playlist?list=..."
+      value={breakVideoUrl}
+      onChange={(e) => setBreakVideoUrl(e.target.value)}
+    />
+  </label>
+</div>
+
+    <iframe
+      ref={iframeRef}
+      width="0"
+      height="0"
+      style={{ display: "none" }}
+      allow="autoplay"
+      allowFullScreen
+    ></iframe>
+
     </div>
   );
 };
