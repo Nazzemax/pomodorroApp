@@ -1,11 +1,15 @@
-'use client';
+import dynamic from 'next/dynamic'
+ 
+const DynamicComponentWithNoSSR = dynamic(
+  () => import('@/components/ui/pomodoroTimer'),
+  { ssr: false }
+)
 
-import PomodoroTimer from "@/components/ui/pomodoroTimer";
 
 export default function Home() {
   return (
  <main>
-  <PomodoroTimer />
+  <DynamicComponentWithNoSSR />
  </main>
   );
 }
