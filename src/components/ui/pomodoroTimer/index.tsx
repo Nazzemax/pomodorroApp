@@ -17,8 +17,8 @@ const PomodoroTimer: React.FC = () => {
   const [cycleCount, setCycleCount] = useState<number>(0);
   const [voicePlayed, setVoicePlayed] = useState<boolean>(false);
   const [isFirstLoad, setIsFirstLoad] = useState<boolean>(true);
-  const [workVideoUrl, setWorkVideoUrl] = useState<string>("");
-  const [breakVideoUrl, setBreakVideoUrl] = useState<string>("");
+  const [workVideoUrl, setWorkVideoUrl] = useState<string>("https://www.youtube.com/watch?v=HuFYqnbVbzY");
+  const [breakVideoUrl, setBreakVideoUrl] = useState<string>("https://www.youtube.com/watch?v=g1Ziw1lhzeU");
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
 
@@ -134,7 +134,8 @@ useEffect(() => {
 
   useEffect(() => {
     console.log("seconds:", seconds, "isRunning:", isRunning, "voicePlayed:", voicePlayed, "mode:", mode);
-    if (isRunning && !voicePlayed && seconds === 10) {
+    if (isRunning && !voicePlayed && seconds === 10 && minutes === 0) {
+      console.log("Playing countdown voice for 10 seconds remaining");
       playCountdownVoice();
       setVoicePlayed(true);
     }
@@ -302,6 +303,18 @@ useEffect(() => {
       onChange={(e) => setWorkVideoUrl(e.target.value)}
     />
   </label>
+
+    <Button className="mx-auto p-2" onClick={() => {
+    if (iframeRef.current) {
+      iframeRef.current.src =
+        mode === "work"
+          ? getYoutubeEmbedUrl(workVideoUrl)
+          : getYoutubeEmbedUrl(breakVideoUrl);
+    }
+  }}>
+    Play Video
+  </Button>
+
   <label className="block">
     Break YouTube URL or Playlist:
     <Input
