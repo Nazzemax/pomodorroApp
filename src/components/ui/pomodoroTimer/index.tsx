@@ -1,8 +1,8 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTimer } from "react-timer-hook";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/app/shared/ui/button";
+import { Input } from "@/app/shared/ui/input";
 import  debounce  from 'lodash.debounce'
 import { BackgroundYouTubePlayer } from "../backgroundPlayer/backgroundYoutubePlayer";
 

@@ -1,11 +1,8 @@
-'use client';
+'use client'
 
-import PomodoroTimer from "@/components/ui/pomodoroTimer";
+import React from "react";
+import PomodoroPage from "@/app/pages/PomodoroPage";
 
-export default function Home() {
-  return (
- <main>
-  <PomodoroTimer />
- </main>
-  );
-}
+const App = () => <PomodoroPage />;
+
+export default App;
